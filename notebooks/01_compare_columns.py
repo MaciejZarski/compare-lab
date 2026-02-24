@@ -188,6 +188,11 @@ float_info.mant_dig
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC https://weitz.de/ieee/
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC SELECT (CAST(1000000000 AS FLOAT) + CAST(1 AS FLOAT) = CAST(1000000001 AS FLOAT)) AS result
 
@@ -359,13 +364,17 @@ display(result)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC https://www.unicode.org/reports/tr15/tr15-23.html
+# MAGIC https://www.unicode.org/reports/tr15/
+# MAGIC
+# MAGIC https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-3/#G49621
+# MAGIC
+# MAGIC https://www.unicode.org/charts/
 
 # COMMAND ----------
 
 from pyspark.sql.functions import udf, col
 from pyspark.sql.types import StringType
-from unicodedata import normalize
+from unicodedata import normalize, name
 
 data = [
     ("é",),                  # U+00E9 composed
@@ -383,41 +392,86 @@ data = [
 
 df = spark.createDataFrame(data, ["original"])
 
+# Normalization Form C (NFC): The Canonical Composition of the Canonical Decomposition of a coded character sequence.
 def normalize_nfc(s):
     return normalize('NFC', s) if s is not None else None
 
+#Normalization Form KC (NFKC): The Canonical Composition of the Compatibility Decomposition of a coded character sequence.
 def normalize_nfkc(s):
     return normalize('NFKC', s) if s is not None else None
 
+#Normalization Form D (NFD): The Canonical Decomposition of a coded character sequence.
 def normalize_nfd(s):
     return normalize('NFD', s) if s is not None else None
 
+#Normalization Form KD (NFKD): The Compatibility Decomposition of a coded character sequence.
 def normalize_nfkd(s):
     return normalize('NFKD', s) if s is not None else None
 
 def to_hex(s):
     return ' '.join(f"{b:02X}" for b in s.encode("utf-8")) if s is not None else None
 
+def to_name(s):
+    return ' / '.join([name(c, '?') for c in s]) if s is not None else None
+
 normalize_nfc_udf = udf(normalize_nfc, StringType())
 normalize_nfkc_udf = udf(normalize_nfkc, StringType())
 normalize_nfd_udf = udf(normalize_nfd, StringType())
 normalize_nfkd_udf = udf(normalize_nfkd, StringType())
 to_hex_udf = udf(to_hex, StringType())
+to_name_udf = udf(to_name, StringType())
 
 df = df \
+    .withColumn("unicode_name", to_name_udf(col("original"))) \
     .withColumn("NFC", normalize_nfc_udf(col("original"))) \
     .withColumn("NFKC", normalize_nfkc_udf(col("original"))) \
     .withColumn("NFD", normalize_nfd_udf(col("original"))) \
     .withColumn("NFKD", normalize_nfkd_udf(col("original"))) \
     .withColumn("hex_original", to_hex_udf(col("original"))) \
     .withColumn("hex_NFC", to_hex_udf(col("NFC"))) \
+    .withColumn("unicode_NFC", to_name_udf(col("NFC"))) \
     .withColumn("hex_NFKC", to_hex_udf(col("NFKC"))) \
+    .withColumn("unicode_NFKC", to_name_udf(col("NFKC"))) \
     .withColumn("hex_NFD", to_hex_udf(col("NFD"))) \
-    .withColumn("hex_NFKD", to_hex_udf(col("NFKD")))
+    .withColumn("unicode_NFD", to_name_udf(col("NFD"))) \
+    .withColumn("hex_NFKD", to_hex_udf(col("NFKD"))) \
+    .withColumn("unicode_NFKD", to_name_udf(col("NFKD"))) \
+    .select("original", "NFD", "NFC", "NFKD", "NFKC", "unicode_name", "unicode_NFD", "unicode_NFC", "unicode_NFKD", "unicode_NFKC", "hex_original", "hex_NFD", "hex_NFC", "hex_NFKD", "hex_NFKC")
 
 # COMMAND ----------
 
 display(df)
+
+# COMMAND ----------
+
+from pyspark.sql.functions import udf
+from pyspark.sql.types import StringType
+from unicodedata import normalize
+
+def normalize_nfd(text):
+    return normalize('NFD', text)
+
+def normalize_nfkd(text):
+    return normalize('NFKD', text)
+
+normalize_nfd_udf = udf(normalize_nfd, StringType())
+normalize_nfkd_udf = udf(normalize_nfkd, StringType())
+
+# COMMAND ----------
+
+from pyspark.sql.functions import col
+
+result = spark.read.table("compare.strings_test") \
+    .withColumn("col5_vs_col6", col("col5") == col("col6")) \
+    .withColumn("col5_vs_col6_nfd", normalize_nfd_udf(col("col5")) == normalize_nfd_udf(col("col6"))) \
+    .withColumn("col5_vs_col6_nfkd", normalize_nfkd_udf(col("col5")) == normalize_nfkd_udf(col("col6"))) \
+    .withColumn("col7_vs_col8", col("col7") == col("col8")) \
+    .withColumn("col7_vs_col8_nfd", normalize_nfd_udf(col("col7")) == normalize_nfd_udf(col("col8"))) \
+    .withColumn("col7_vs_col8_nfkd", normalize_nfkd_udf(col("col7")) == normalize_nfkd_udf(col("col8")))
+
+# COMMAND ----------
+
+display(result)
 
 # COMMAND ----------
 
