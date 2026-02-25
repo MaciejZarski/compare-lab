@@ -1,5 +1,6 @@
 # Databricks notebook source
-from pyspark.sql.functions import col, min, max, avg, sum, count, countDistinct, lower, sort_array, lit, when, array, concat, coalesce, uuid
+from pyspark.sql.functions import col, min, max, avg, sum, count, countDistinct, lower, sort_array, lit, when, array, concat, coalesce
+#, uuid -- new in version pyspark 4.1.0
 
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 
@@ -13,11 +14,11 @@ def compare_data(left_df, right_df, keys, ignore_columns, rows_limit, show_all=F
 
     # Prepare left DataFrame
     left_sel = [col(k) for k in keys] + [col(c).alias(f"{c}_left") for c in common_cols]
-    left_df_mod = left_df.drop(*ignore_columns).select(*left_sel).withColumn("__left", lit(1)).withColumn("left_uuid", uuid())
+    left_df_mod = left_df.drop(*ignore_columns).select(*left_sel).withColumn("__left", lit(1))#.withColumn("left_uuid", uuid())
 
     # Prepare right DataFrame
     right_sel = [col(k) for k in keys] + [col(c).alias(f"{c}_right") for c in common_cols]
-    right_df_mod = right_df.drop(*ignore_columns).select(*right_sel).withColumn("__right", lit(1)).withColumn("right_uuid", uuid())
+    right_df_mod = right_df.drop(*ignore_columns).select(*right_sel).withColumn("__right", lit(1))#.withColumn("right_uuid", uuid())
 
     # Join DataFrames
     joined = left_df_mod.join(right_df_mod, keys, "outer")
@@ -33,7 +34,8 @@ def compare_data(left_df, right_df, keys, ignore_columns, rows_limit, show_all=F
         .otherwise(concat(*change_exprs)).alias("changed_columns")
 
     # Select columns
-    select_cols = [diff_col, changed_col, col("left_uuid"), col("right_uuid")] + \
+#    select_cols = [diff_col, changed_col, col("left_uuid"), col("right_uuid")] + \
+    select_cols = [diff_col, changed_col] + \
         [coalesce(col(k), col(k)).alias(k) for k in keys] + \
         [col(f"{common_cols[i//2]}_left") if i % 2 == 0 else col(f"{common_cols[i//2]}_right") for i in range(len(common_cols)*2)]
 
@@ -161,7 +163,8 @@ def compare_structures(left, right, show_all=False):
 
 def compare_structures_with_table_name(table_name, left, right, show_all=False):
     compare_result = compare_structures(left, right, show_all)
-    cols = ["table_name", "column_name", "diff", "changed_columns", "left_uuid", "right_uuid", "column_index_left", "column_index_right", "column_type_left", "column_type_right", "nullable_left", "nullable_right", "metadata_left", "metadata_right"]
+#    cols = ["table_name", "column_name", "diff", "changed_columns", "left_uuid", "right_uuid", "column_index_left", "column_index_right", "column_type_left", "column_type_right", "nullable_left", "nullable_right", "metadata_left", "metadata_right"]
+    cols = ["table_name", "column_name", "diff", "changed_columns", "column_index_left", "column_index_right", "column_type_left", "column_type_right", "nullable_left", "nullable_right", "metadata_left", "metadata_right"]
     result = compare_result.withColumn("table_name", lit(table_name)).select(cols)
     return result
 

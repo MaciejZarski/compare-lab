@@ -10,7 +10,7 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT COUNT(*) FROM compare.retail_transactions WHERE InsertTimestamp = TIMESTAMP '2026-01-01T10:06:07.001+00:00'
+# MAGIC SELECT COUNT(*) FROM compare.retail_transactions WHERE InsertTimestamp = TIMESTAMP '2026-01-01T10:08:03.000+00:00'
 
 # COMMAND ----------
 
@@ -20,7 +20,7 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT COUNT(*) FROM compare.retail_transactions WHERE InsertTimestamp >= TIMESTAMP '2026-01-01T10:06:07.001+00:00' AND InsertTimestamp < TIMESTAMP '2026-01-01T10:06:08.001+00:00'
+# MAGIC SELECT COUNT(*) FROM compare.retail_transactions WHERE InsertTimestamp >= TIMESTAMP '2026-01-01T10:08:03.000+00:00' AND InsertTimestamp < TIMESTAMP '2026-01-01T10:08:03.001+00:00'
 
 # COMMAND ----------
 
@@ -314,6 +314,11 @@ float_info.mant_dig
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC https://www.cogsci.ed.ac.uk/~richard
+
+# COMMAND ----------
+
 # %scala
 # import java.text.Normalizer
 # import org.apache.spark.sql.functions.udf
@@ -387,7 +392,8 @@ data = [
     ("ᵃ",),                  # superscript a
     ("㎡",),                  # square meter
     ("😀",),                 # emoji
-    ("ę",)                   # Polish letter
+    ("ę",),                   # Polish letter
+    ("\uFB03",)                 #ffi ligature
 ]
 
 df = spark.createDataFrame(data, ["original"])
