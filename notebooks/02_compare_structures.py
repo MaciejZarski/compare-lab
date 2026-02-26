@@ -39,6 +39,16 @@ df1.schema == df2.schema
 
 # COMMAND ----------
 
+import difflib
+
+# COMMAND ----------
+
+d = difflib.unified_diff(df1.schema.treeString().splitlines(), df2.schema.treeString().splitlines(), fromfile='before', tofile='after')
+
+print('\n'.join(list(d)))
+
+# COMMAND ----------
+
 # DBTITLE 1,Compare schema fields: differences
 fields1 = set(df1.schema.fields)
 fields2 = set(df2.schema.fields)
@@ -87,6 +97,12 @@ df4 = spark.createDataFrame(data4, schema4)
 
 df3.printSchema()
 df4.printSchema()
+
+# COMMAND ----------
+
+d_3_vs_4 = difflib.unified_diff(df3.schema.treeString().splitlines(), df4.schema.treeString().splitlines(), fromfile='before', tofile='after')
+
+print('\n'.join(list(d_3_vs_4)))
 
 # COMMAND ----------
 

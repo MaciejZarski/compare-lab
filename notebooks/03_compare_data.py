@@ -61,6 +61,19 @@ df2.createOrReplaceTempView("df2_vw")
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC SELECT df1_vw.id AS id_left, df1_vw.first_name AS first_name_left, df1_vw.last_name AS last_name_left, df1_vw.city AS city_left,
+# MAGIC df2_vw.id AS id_right, df2_vw.first_name AS first_name_right, df2_vw.last_name AS last_name_right, df2_vw.city AS city_right
+# MAGIC FROM 
+# MAGIC df1_vw FULL OUTER JOIN df2_vw
+# MAGIC ON df1_vw.id = df2_vw.id
+# MAGIC WHERE 
+# MAGIC   COALESCE(df1_vw.first_name, '#') != COALESCE(df2_vw.first_name, '#') 
+# MAGIC   OR COALESCE(df1_vw.last_name, '#') != COALESCE(df2_vw.last_name, '#') 
+# MAGIC   OR COALESCE(df1_vw.city, '#') != COALESCE(df2_vw.city, '#') 
+
+# COMMAND ----------
+
 # MAGIC %run ./00_functions_python
 
 # COMMAND ----------

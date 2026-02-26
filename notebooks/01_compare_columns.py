@@ -24,6 +24,10 @@
 
 # COMMAND ----------
 
+# rt = spark.sql("SELECT MAX(InsertTimestamp) AS ts FROM compare.retail_transactions").collect()
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC SELECT 
 # MAGIC   InsertTimestamp, 
