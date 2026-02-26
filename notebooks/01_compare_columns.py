@@ -486,6 +486,51 @@ display(result)
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC https://learn.microsoft.com/en-us/azure/databricks/sql/language-manual/sql-ref-collation
+# MAGIC
+# MAGIC **UTF8_BINARY**
+# MAGIC
+# MAGIC A meta-locale binary collation that compares strings byte by byte based on the UTF-8 byte representation. UTF8_BINARY is the default and most lightweight collation for string comparison in Azure Databricks.
+# MAGIC
+# MAGIC In this collation 'A' (x'65') < 'B' (x'66') < … < 'Z' (x'90').
+# MAGIC
+# MAGIC However, 'Z' (x'90') < 'a' (x'97'), and 'A' (x'65') <> 'a' (x'97').
+# MAGIC
+# MAGIC Further, characters such as 'Ä' (x'C384') are greater than 'Z' and 'z' in this collation.
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC **modifier**
+# MAGIC
+# MAGIC Specifies the collation behavior regarding case sensitivity and accent sensitivity.
+# MAGIC
+# MAGIC - CS: Case-sensitive. The default behavior.
+# MAGIC - CI: Case-insensitive.
+# MAGIC - AS: Accent-sensitive. The default behavior.
+# MAGIC - AI: Accent-insensitive.
+# MAGIC
+# MAGIC Applies to: Databricks SQL, Databricks Runtime 16.2 and above
+# MAGIC
+# MAGIC RTRIM: Trailing space insensitive. Trims trailing spaces ('u0020') before comparison.
+# MAGIC Applies to: Databricks SQL, Databricks Runtime 16.2 and above
+# MAGIC
+# MAGIC You can specify RTRIM, either CS or CI, and either AS or AI at most once and in any order. The modifiers themselves are case-insensitive.
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT 
+# MAGIC   col1 = col2 COLLATE UNICODE_CI_AI_RTRIM AS col1_vs_col2,
+# MAGIC   col2 = col3 COLLATE UNICODE_CI_AI_RTRIM AS col2_vs_col3,
+# MAGIC   col3 = col4 COLLATE UNICODE_CI_AI_RTRIM AS col3_vs_col4,
+# MAGIC   col5 = col6 COLLATE UNICODE_CI_AI_RTRIM AS col5_vs_col6,
+# MAGIC   col7 = col8 COLLATE UNICODE_CI_AI_RTRIM AS col7_vs_col8
+# MAGIC FROM compare.strings_test
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC #Arrays, maps
 
 # COMMAND ----------
