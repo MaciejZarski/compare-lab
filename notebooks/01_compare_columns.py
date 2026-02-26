@@ -35,7 +35,6 @@
 # MAGIC   unix_millis(InsertTimestamp) AS InsertTimestampUnixMilli,   
 # MAGIC   unix_micros(InsertTimestamp) AS InsertTimestampUnixMicro,
 # MAGIC   CAST(InsertTimestamp AS BIGINT) AS InsertTimestampBigInt
-# MAGIC   --(CAST(unix_micros(InsertTimestamp) AS BIGINT) * 1000) + (CAST(DATE_FORMAT(InsertTimestamp, 'SSSSSS') AS BIGINT) % 1000) AS InsertTimestampUnixNano
 # MAGIC FROM compare.retail_transactions 
 # MAGIC ORDER BY InsertTimestamp
 
@@ -319,7 +318,7 @@ float_info.mant_dig
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC https://www.cogsci.ed.ac.uk/~richard
+# MAGIC https://www.cogsci.ed.ac.uk/~richard/utf-8.html
 
 # COMMAND ----------
 
@@ -527,6 +526,28 @@ display(result)
 # MAGIC   col5 = col6 COLLATE UNICODE_CI_AI_RTRIM AS col5_vs_col6,
 # MAGIC   col7 = col8 COLLATE UNICODE_CI_AI_RTRIM AS col7_vs_col8
 # MAGIC FROM compare.strings_test
+
+# COMMAND ----------
+
+len("בְּרֵאשִׁ֖ית")
+
+# COMMAND ----------
+
+from pyspark.sql.functions import length, bit_length, char_length, octet_length
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT length("בְּרֵאשִׁ֖ית"), bit_length("בְּרֵאשִׁ֖ית"), char_length("בְּרֵאשִׁ֖ית"), octet_length("בְּרֵאשִׁ֖ית")
+
+# COMMAND ----------
+
+from unicodedata import name
+
+text = "בְּרֵאשִׁ֖ית"
+for i, c in enumerate(text, 1):
+    utf8_bytes = ' '.join(f"{b:02X}" for b in c.encode("utf-8"))
+    print(f"{i}: {name(c, '?')} → U+{ord(c):04X} → [{utf8_bytes}] → {c}")
 
 # COMMAND ----------
 
