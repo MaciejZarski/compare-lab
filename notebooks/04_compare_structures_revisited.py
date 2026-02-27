@@ -43,3 +43,78 @@ left = df1
 right = df2
 diff_struct = compare_structures(left, right)
 display(diff_struct)
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC DESCRIBE EXTENDED samples.bakehouse.sales_customers
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC DESCRIBE EXTENDED workspace.bakehouse2.sales_customers
+
+# COMMAND ----------
+
+from pyspark.sql.functions import monotonically_increasing_id, col, when, concat, lit
+
+struct1 = spark.sql("DESCRIBE EXTENDED samples.bakehouse.sales_customers")
+struct1 = struct1.withColumn("row_number", monotonically_increasing_id() + 1)
+delta_stats_row = struct1.where("col_name = '# Delta Statistics Columns'").collect()[0]
+
+row_number = int(delta_stats_row["row_number"])
+
+struct1 = struct1.withColumn(
+    "col_name",
+    when(col("row_number") >= row_number, concat(lit("p:"), col("col_name"))).otherwise(concat(lit("c:"), col("col_name")))
+).withColumnsRenamed(
+    {
+        "col_name": "property_name",
+        "data_type": "property_value"
+    }
+).drop("comment").filter(
+    (col("col_name") != "c:") &
+    (col("col_name") != "p:") &    
+    (col("col_name") != "#") &
+    (~col("col_name").startswith("p:#"))
+)
+
+# COMMAND ----------
+
+display(struct1)
+
+# COMMAND ----------
+
+from pyspark.sql.functions import monotonically_increasing_id, col, when, concat, lit
+
+struct2 = spark.sql("DESCRIBE EXTENDED workspace.bakehouse2.sales_customers")
+struct2 = struct2.withColumn("row_number", monotonically_increasing_id() + 1)
+delta_stats_row = struct2.where("col_name = '# Delta Statistics Columns'").collect()[0]
+
+row_number = int(delta_stats_row["row_number"])
+
+struct2 = struct2.withColumn(
+    "col_name",
+    when(col("row_number") >= row_number, concat(lit("p:"), col("col_name"))).otherwise(concat(lit("c:"), col("col_name")))
+).withColumnsRenamed(
+    {
+        "col_name": "property_name",
+        "data_type": "property_value"
+    }
+).drop("comment").filter(
+    (col("col_name") != "c:") &
+    (col("col_name") != "p:") &    
+    (col("col_name") != "#") &
+    (~col("col_name").startswith("p:#"))
+)
+
+# COMMAND ----------
+
+left = struct1
+right = struct2
+keys = ['property_name']
+ignore_columns = ['row_number']
+rows_limit = 100
+
+diff_data = compare_data(left, right, keys, ignore_columns, rows_limit)
+display(diff_data)
